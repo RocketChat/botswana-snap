@@ -1,1 +1,1 @@
-# BOT-swana - The Serengeti of bots
+# BOTS-wana  The Serengeti of bots
