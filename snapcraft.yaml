@@ -3,45 +3,39 @@ version: 0.0.1
 summary: Run any bot on any chat, painlessly!
 description: Coming soon...
 
-grade: devel #stable
-confinement: devmode #strict
+grade: stable
+confinement: strict
 
 apps:
-    deploy:
-        command: env PATH=$PATH:$SNAP/libexec/git-core LC_ALL=C deploy_bot
-        plugs: [home, network]
+    rcbot:
+        command: env PATH=$PATH:$SNAP LC_ALL=C rcbot
+        plugs: [network, network-bind]
+
 parts:
     git:
-        source: https://github.com/git/git
-        source-type: git
-        source-depth: 1
         plugin: autotools
-        configflags:
-            - --with-curl
-            - --with-expat
-        build-packages:
-            - gettext
-            - libssl-dev
-            - libcurl4-openssl-dev
-            - libexpat1-dev
-        stage-packages:
-            - libcurl3
+        source: https://github.com/git/git/archive/v2.10.2.tar.gz
+
     node:
         plugin: nodejs
         node-engine: 6.9.4
         node-packages:
-            - yo
-            - generator-hubot
-        stage:
-            - bin
-            - lib/node_modules
-        prime:
-            - bin
-            - lib/node_modules
+            - yo@1.8.5
+            - generator-hubot@0.4.0
+        install: |
+            bot_adapter="rocketchat"
+            # Needs a better name, no?
+            bot_name="rcbot"
+            bot_dir="/home/$(whoami)/snap/botswana-snap/common/$bot_name"
+            mv "$bot_dir/package.json" "$bot_dir/package.json.old"
+            mkdir -p $bot_dir && cd $bot_dir
+            yo hubot --no-insight --owner="Rocket.Chat Admin" --description="A wild Rocket.Chat bot from the botswana-snap safari." --name="$bot_name" --adapter="$bot_adapter"
+
     scripts:
         plugin: dump
         source: bin/
         organize:
-            deploy_bot: bin/deploy_bot
+            rcbot: bin/rcbot
         prime:
             - bin
+
