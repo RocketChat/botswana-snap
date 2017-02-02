@@ -1,0 +1,21 @@
+#! /bin/bash
+
+# TODO make friendly prompts for these, explaining their effects
+export ROCKETCHAT_ROOM=''
+# Is auth always password with bots?
+export ROCKETCHAT_AUTH=password
+export ROCKETCHAT_USER=bot
+export ROCKETCHAT_PASSWORD=bot
+export LISTEN_ON_ALL_PUBLIC=true
+
+# TODO make optional prompts for these, definitely explaining their effects
+# E.g., "would you like to configure advanced options?" if so, ask for values
+# export RESPOND_TO_DM=''
+# export RESPOND_TO_EDITED=''
+# export ROOM_ID_CACHE_SIZE=''
+# export DM_ROOM_ID_CACHE_SIZE=''
+# export ROOM_ID_CACHE_MAX_AGE=''
+
+cd $SNAP_USER_COMMON/rcbot
+bin/hubot -a rocketchat
+
