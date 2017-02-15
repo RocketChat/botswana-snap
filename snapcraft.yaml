@@ -7,15 +7,11 @@ grade: stable
 confinement: strict
 
 apps:
-    rcbot:
-        command: env PATH=$PATH:$SNAP LC_ALL=C rcbot
+    letloose:
+        command: env PATH=$PATH:$SNAP LC_ALL=C letloose
         plugs: [network, network-bind]
 
 parts:
-    git:
-        plugin: autotools
-        source: https://github.com/git/git/archive/v2.10.2.tar.gz
-
     node:
         plugin: nodejs
         node-engine: 6.9.4
@@ -23,19 +19,29 @@ parts:
             - yo@1.8.5
             - generator-hubot@0.4.0
         install: |
+            # TODO multiple adapters on the same hubot install, somehow
             bot_adapter="rocketchat"
-            # Needs a better name, no?
-            bot_name="rcbot"
-            bot_dir="/home/$(whoami)/snap/botswana-snap/common/$bot_name"
-            mv "$bot_dir/package.json" "$bot_dir/package.json.old"
+            bot_name="template_rc"
+            bot_dir=".bot_templates/$bot_name"
+            [[ -f $bot_dir/package.json ]] && mv "$bot_dir/package.json" "$bot_dir/package.json.old"
             mkdir -p $bot_dir && cd $bot_dir
             yo hubot --no-insight --owner="Rocket.Chat Admin" --description="A wild Rocket.Chat bot from the botswana-snap safari." --name="$bot_name" --adapter="$bot_adapter"
+            cd ../../
+            cp -R .bot_templates $SNAPCRAFT_PART_INSTALL
+        stage:
+            - .bot_templates
+            - bin
+            - lib
+        prime:
+            - .bot_templates
+            - bin
+            - lib
 
     scripts:
         plugin: dump
         source: bin/
         organize:
-            rcbot: bin/rcbot
+            letloose: bin/letloose
         prime:
             - bin
 
