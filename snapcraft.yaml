@@ -3,12 +3,12 @@ version: 0.0.1
 summary: Run any bot on any chat, painlessly!
 description: Coming soon...
 
-grade: stable
+grade: devel
 confinement: strict
 
 apps:
     letloose:
-        command: env PATH=$PATH:$SNAP LC_ALL=C letloose
+        command: env PATH=$PATH:$SNAP LC_ALL=C letloose.sh
         plugs: [network, network-bind]
 
 parts:
@@ -18,22 +18,13 @@ parts:
         node-packages:
             - yo@1.8.5
             - generator-hubot@0.4.0
-        install: |
-            # TODO multiple adapters on the same hubot install, somehow
-            bot_adapter="rocketchat"
-            bot_name="template_rc"
-            bot_dir=".bot_templates/$bot_name"
-            [[ -f $bot_dir/package.json ]] && mv "$bot_dir/package.json" "$bot_dir/package.json.old"
-            mkdir -p $bot_dir && cd $bot_dir
-            yo hubot --no-insight --owner="Rocket.Chat Admin" --description="A wild Rocket.Chat bot from the botswana-snap safari." --name="$bot_name" --adapter="$bot_adapter"
-            cd ../../
-            cp -R .bot_templates $SNAPCRAFT_PART_INSTALL
+        install: ./bin/install.sh
         stage:
-            - .bot_templates
+            - chatbot
             - bin
             - lib
         prime:
-            - .bot_templates
+            - chatbot
             - bin
             - lib
 
@@ -41,7 +32,7 @@ parts:
         plugin: dump
         source: bin/
         organize:
-            letloose: bin/letloose
+            letloose.sh: bin/letloose.sh
         prime:
             - bin
 
