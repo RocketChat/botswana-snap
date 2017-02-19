@@ -158,7 +158,7 @@ done
 # TODO detect existing, load config file, then overwrite (or ask for overwrite in the first place)
 local_bot_dir="${SNAP_USER_COMMON}/${bot_name}/"
 mkdir -p "${local_bot_dir}"
-cp -fPrsu ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
+cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
 cd "${local_bot_dir}"
 
 # TODO pipe this output to a log file
