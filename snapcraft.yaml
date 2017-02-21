@@ -1,4 +1,4 @@
-name: botswana-snap
+name: botswana
 version: 0.0.1
 summary: Run any bot on any chat, painlessly!
 description: Coming soon...
@@ -10,6 +10,8 @@ apps:
     letloose:
         command: env PATH=$PATH:$SNAP LC_ALL=C letloose.sh
         plugs: [network, network-bind]
+    observe:
+        command: env PATH=$PATH:$SNAP LC_ALL=C observe.sh
 
 parts:
     node:
@@ -33,6 +35,7 @@ parts:
         source: bin/
         organize:
             letloose.sh: bin/letloose.sh
+            observe.sh: bin/observe.sh
         prime:
             - bin
 
