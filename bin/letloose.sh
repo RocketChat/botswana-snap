@@ -21,11 +21,11 @@ PS3="> "
 fname="${SNAP_USER_COMMON}/.prev_bot_name"
 touch "${fname}"
 prev_bot_name=$(cat "${fname}")
-# TODO use which here maybe?
-while [[ ! ${bot_name} =~ ^[a-zA-Z0-9_-]{3,16}$ ]]
+while [[ ! "${bot_name}" =~ ^[-_@.a-zA-Z0-9]{3,64}$ ]]
 do
     read -ei "${prev_bot_name}" -p "[?] What is the bot account's user name or ID?
 > " bot_name
+    which "${bot_name}" && bot_name="" && continue
 done
 printf "${bot_name}" > ${fname}
 
@@ -76,7 +76,7 @@ function set_config_options {
 
 function exit_if_running {
     msg=${1}
-    pid=$(pgrep -f "\--name ${proc_id} -a ${adapter}")
+    pid=$(pgrep -f "\--name "${proc_name}" -a ${adapter}")
     if [[ -n ${pid} ]]
     then
         echo "[!] ${bot_name} is happily running wild on ${engine}!"
@@ -94,8 +94,7 @@ function set_variables {
         mkdir -p $(dirname ${fname})
         touch ${fname}
         prev_url=$(cat "${fname}")
-        # TODO finish this URL input validation, then finish the rest
-        while [[ ! ${engine_url} =~ ^https?://[]]
+        while [[ ! "${engine_url}" =~ ^https?://[-_#.a-zA-Z0-9:\&?=]{3,64}$ ]]
         do
             IFS=" " read -ei "${prev_url}" -p "[?] What is your ${engine} URL?
 > " engine_url
@@ -121,6 +120,7 @@ function set_variables {
 
     local_bot_dir="${SNAP_USER_COMMON}/${bot_name}/${proc_id}"
     mkdir -p "${local_bot_dir}"
+    proc_name="${bot_name}/${proc_id}"
     exit_if_running
 
     if [[ $((${selected_options} & ${password_mask})) > 0 ]]
@@ -141,9 +141,12 @@ It will not be displayed as you type.
         fname="${local_bot_dir}/.prev_rooms"
         touch ${fname}
         prev_rooms=$(cat "${fname}")
-        read -ei "${prev_rooms}" -p "[?] Which channel(s) should ${bot_name} automatically join?
-Separate multiple channels with commas; enter \"all\" for all public channels.
+        while [[ ! "${bot_rooms}" =~ ^[-_,a-zA-Z0-9]{3,64}$ ]]
+        do
+            read -ei "${prev_rooms}" -p "[?] Which channel(s) should ${bot_name} automatically join?
+Separate multiple channels with commas (no spaces); enter \"all\" for all public channels.
 > " bot_rooms
+        done
         printf "${bot_rooms}" > ${fname}
         case ${adapter} in
             rocketchat)
@@ -171,26 +174,26 @@ set_config_options
 set_variables
 
 
-logname="${local_bot_dir}/${bot_name}.log"
-cp -frsv ${SNAP}/chatbot/* "${local_bot_dir}" > ${logname}
+logpath="${local_bot_dir}/${bot_name}.log"
+cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
 
 function warn_error {
     msg=("$@")
     echo "[!] Something's not right..."
     [[ -n ${msg} ]] && printf '[!] %s\n' "${msg[@]}"
-    echo "[*] Please check ${logname} for more details."
+    echo "[*] Please check ${logpath} for more details."
     echo "[-] ${bot_name} is inactive!"
 }
 
 cd "${local_bot_dir}"
-env BOTSWANA_DIR="${local_bot_dir}" BOTSWANA_NAME="${bot_name}" ./bin/hubot --name "${proc_id}" -a "${adapter}" &>> "${local_bot_dir}/${bot_name}.log" &
+./bin/hubot --name "${proc_name}" -a "${adapter}" --disable-httpd &> "${logpath}" &
 
 IFS=$'\n'
 echo "[*] Observing ${bot_name}'s behavior in ${engine}..."
 for i in {1..5}
 do
     sleep 1
-    error=($(tail -n 50 ${logname} | grep ERROR))
+    error=($(tail -n 50 "${logpath}" | grep ERROR))
 done
 
 exit_if_running "[+] ${bot_name} is active!"

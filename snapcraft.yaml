@@ -11,7 +11,7 @@ apps:
         command: env PATH=$PATH:$SNAP LC_ALL=C letloose.sh
         plugs: [network, network-bind]
     observe:
-        command: env PATH=$PATH:$SNAP LC_ALL=C observe.sh
+        command: env LC_ALL=C observe.sh
 
 parts:
     node:
