@@ -1,26 +1,36 @@
 #! /bin/bash
 
 IFS=$'\n'
-rex="[-]-name chatbot --name [-_@./a-zA-Z0-9]{3,128}"
-
-proc_ids=($(pgrep -f "${rex}"))
+rex="[-]-name [-_@./a-zA-Z0-9]{3,128} --alias [-_@.a-zA-Z0-9]{3,64}"
 
 bot_search=${1}
-
-for proc_id in "${proc_ids[@]}"
+procs=($(pgrep -af "${rex}"))
+for proc in "${procs[@]}"
 do
-    name_id=$(ps -au | grep "${proc_id}" | egrep -o "${rex}")
-    name_id=${name_id##* }
-    bot_name=${name_id%/*}
-    bot_id=${name_id#*/}
+    proc_id=${proc%% *}
+    proc_cmd=$(echo "${proc#* }" | egrep -o "${rex}")
+
+    # Grab the local bot directory, excluding the "--name " part...
+    bot_dir=${proc_cmd#* }
+    # ...then excluding everything up to and including " --alias"
+    bot_dir=${bot_dir%% *}
+
+    # Grab just the bot name, excluding everything up to and including "--alias "
+    bot_name=${proc_cmd##* }
+
     [[ -n "${bot_search}" && "${bot_search}" != "${bot_name}" ]] && continue
-    echo "--- ${bot_name} (pid ${proc_id}) ---"
-    logpath="${SNAP_USER_COMMON}/${bot_name}/${bot_id}/${bot_name}.log"
+    echo ">>> ${bot_name} (pid ${proc_id}) <<<"
+    logpath="${bot_dir}/${bot_name}.log"
     echo "[*] Log location: ${logpath}"
-    echo "[*] Connection details:"
-    head -n 8 "${logpath}"
-    echo "[*] Log tail:"
-    tail -n 5 "${logpath}"
+    if [[ -O ${logpath} ]]
+    then
+        echo "[*] Connection details:"
+        head -n 8 "${logpath}"
+        echo "[*] Log tail:"
+        tail -n 5 "${logpath}"
+    else
+        echo "[!] Cannot read log file: belongs to another user!"
+    fi
     echo ""
 done
 

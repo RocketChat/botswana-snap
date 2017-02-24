@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# TODO script templates
+# TODO script templates (use --require hubot flag?)
 
 function on_exit {
     unset HUBOT_HIPCHAT_HOST
@@ -15,6 +15,12 @@ function on_exit {
     unset ROCKETCHAT_USER
 }
 trap on_exit EXIT
+
+if [[ ${EUID} == 0 ]]
+then
+    echo "[-] This command may not be run as root."
+    exit
+fi
 
 PS3="> "
 
@@ -75,10 +81,10 @@ function set_config_options {
 }
 
 function exit_if_running {
-    msg=${1}
-    pid=$(pgrep -f "\--name "${proc_name}" -a ${adapter}")
+    pid=$(pgrep -f "${bot_id} --alias ${bot_name} -a ${adapter}")
     if [[ -n ${pid} ]]
     then
+        msg="${1}"
         echo "[!] ${bot_name} is happily running wild on ${engine}!"
         echo "[*] Prior to making further changes, please tranquilize ${bot_name} by running:"
         echo "    kill ${pid} (sounds lethal, but it's not)"
@@ -104,7 +110,7 @@ function set_variables {
             rocketchat) export ROCKETCHAT_URL=${engine_url};;
             hipchat   ) export HUBOT_HIPCHAT_HOST=${engine_url};;
         esac
-        proc_id=$(printf ${engine_url} | sha256sum | head -c 16)
+        bot_id=$(printf ${engine_url} | sha256sum | head -c 16)
     fi
 
     if [[ $((${selected_options} & ${token_mask})) > 0 ]]
@@ -114,13 +120,12 @@ function set_variables {
         case ${adapter} in
             slack) export HUBOT_SLACK_TOKEN=${bot_token};;
         esac
-        proc_id=$(printf ${bot_token} | sha256sum | head -c 16)
+        bot_id=$(printf ${bot_token} | sha256sum | head -c 16)
         unset bot_token
     fi
 
-    local_bot_dir="${SNAP_USER_COMMON}/${bot_name}/${proc_id}"
+    local_bot_dir="${SNAP_USER_COMMON}/${bot_name}/${bot_id}"
     mkdir -p "${local_bot_dir}"
-    proc_name="${bot_name}/${proc_id}"
     exit_if_running
 
     if [[ $((${selected_options} & ${password_mask})) > 0 ]]
@@ -171,6 +176,7 @@ set_config_options
 # For troubleshooting:
 # echo "obase=2; ${selected_options}" | bc; exit;
 
+
 set_variables
 
 
@@ -186,10 +192,21 @@ function warn_error {
 }
 
 cd "${local_bot_dir}"
-./bin/hubot --name "${proc_name}" -a "${adapter}" --disable-httpd &> "${logpath}" &
+
+echo "[*] Running checks on ${bot_name}..."
+./bin/hubot --config-check -a "${adapter}" --disable-httpd &> "${logpath}"
+if [[ $? != 0 ]]
+then
+    echo "[!] Checks failed! Please check ${logpath} for details."
+    echo "[-] Aborted!"
+    exit
+fi
+
+echo "[*] Releasing ${bot_name}..."
+./bin/hubot --name "${local_bot_dir}" --alias "${bot_name}" -a "${adapter}" --disable-httpd &> "${logpath}" &
 
 IFS=$'\n'
-echo "[*] Observing ${bot_name}'s behavior in ${engine}..."
+echo "[*] Observing ${bot_name}'s behavior..."
 for i in {1..5}
 do
     sleep 1
