@@ -20,16 +20,21 @@ do
 
     [[ -n "${bot_search}" && "${bot_search}" != "${bot_name}" ]] && continue
     echo ">>> ${bot_name} (pid ${proc_id}) <<<"
+
+    # TODO try to extract meaningful information like URL or slack team somehow
+
     logpath="${bot_dir}/${bot_name}.log"
     echo "[*] Log location: ${logpath}"
+
+    # TODO put this under a verbose flag
     if [[ -O ${logpath} ]]
     then
-        echo "[*] Connection details:"
-        head -n 8 "${logpath}"
+        echo "[*] Log head:"
+        head "${logpath}"
         echo "[*] Log tail:"
-        tail -n 5 "${logpath}"
+        tail "${logpath}"
     else
-        echo "[!] Cannot read log file: belongs to another user!"
+        echo "[-] Cannot read log file: belongs to another user!"
     fi
     echo ""
 done
