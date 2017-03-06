@@ -223,4 +223,5 @@ done
 
 [[ -n $errors ]] && warn_error "${errors[@]}"
 exit_if_running "[+] ${bot_name} is now running wild on ${engine}!"
+exit 1
 
