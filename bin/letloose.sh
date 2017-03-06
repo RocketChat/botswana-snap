@@ -176,10 +176,10 @@ set_variables
 fname="${SNAP_USER_COMMON}/.prev_scripts_dir"
 touch "${fname}"
 prev_scripts_dir=$(cat "${fname}")
-while [[ ! -d ${scripts_dir} ]]
+while [[ ! -d ${scripts_dir} && ${scripts_dir} != ${homedir}/* ]]
 do
     read -ei "${prev_scripts_dir}" -p "[?] Where are ${bot_name}'s behavior scripts located?
-    Please use absolute paths. Inexistent directories will be created.
+    Must point to a directory within ${homedir}. Inexistent directories will be created.
 > " scripts_dir
     mkdir -p ${scripts_dir}
     # Ensure we're grabbing the absolute path just in case
@@ -221,7 +221,7 @@ do
     errors=($(tail -n 50 "${logpath}" | grep ERROR))
 done
 
-[[ -n $errors ]] && warn_error "${errors[@]}"
+[[ -n ${errors} ]] && warn_error "${errors[@]}"
 exit_if_running "[+] ${bot_name} is now running wild on ${engine}!"
 exit 1
 

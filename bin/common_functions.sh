@@ -1,5 +1,7 @@
 #! /bin/bash
 
+homedir=$(getent passwd "${USER}" | cut -d: -f6)
+
 function abort {
     echo "[!] Aborted!"
     exit 1

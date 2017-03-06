@@ -6,7 +6,6 @@ check_authz
 
 local_bot_dir=${1}
 
-homedir=$(getent passwd "${USER}" | cut -d: -f6)
 if [[ -d ${local_bot_dir} && ${local_bot_dir} == ${homedir}/* ]]
 then
     cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
