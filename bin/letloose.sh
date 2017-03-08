@@ -1,7 +1,6 @@
 #! /bin/bash
 
 function on_exit {
-    unset HUBOT_HIPCHAT_HOST
     unset HUBOT_HIPCHAT_JID
     unset HUBOT_HIPCHAT_PASSWORD
     unset HUBOT_HIPCHAT_ROOMS
@@ -20,6 +19,22 @@ check_authz
 
 PS3="> "
 
+echo "[?] What is your chat engine?"
+select engine in "Rocket.Chat" "Slack" "HipChat"
+do
+    case ${engine} in
+        Rocket.Chat)
+            adapter="rocketchat"
+            break;;
+        Slack)
+            adapter="slack"
+            break;;
+        HipChat)
+            adapter="hipchat"
+            break;;
+    esac
+done
+
 fname="${SNAP_USER_COMMON}/.prev_bot_name"
 touch "${fname}"
 prev_bot_name=$(cat "${fname}")
@@ -27,27 +42,25 @@ while [[ ! "${bot_name}" =~ ^[-_@.a-zA-Z0-9]{3,64}$ ]]
 do
     read -ei "${prev_bot_name}" -p "[?] What is the bot account's user name or ID?
 > " bot_name
-    which "${bot_name}" && bot_name="" && continue
-done
-printf "${bot_name}" > ${fname}
-
-echo "[?] What is your chat engine?"
-select engine in "Rocket.Chat" "Slack" "HipChat"
-do
-    case ${engine} in
-        Rocket.Chat)
-            adapter="rocketchat"
+    which "${bot_name}" > /dev/null && bot_name="" && continue
+    case ${adapter} in
+        rocketchat)
             export ROCKETCHAT_USER=${bot_name}
-            break;;
-        Slack)
-            adapter="slack"
-            break;;
-        HipChat)
-            adapter="hipchat"
+            ;;
+        hipchat)
+            if [[ ! ${bot_name} =~ ^[0-9]{1,10}_[0-9]{1,10}@chat.hipchat.com$ ]]
+            then
+                [[ ${bot_name} =~ ^[0-9]{1,10}_[0-9]{1,10}$ ]] && bot_name+="@chat.hipchat.com"
+                echo "[-] Invalid ID for HipChat! Please specify the bot account's Jabber ID."
+                echo "    E.g.: 123_456@chat.hipchat.com"
+                prev_bot_name=${bot_name}
+                bot_name=""
+            fi
             export HUBOT_HIPCHAT_JID=${bot_name}
-            break;;
+            ;;
     esac
 done
+printf "${bot_name}" > ${fname}
 
         url_mask=2#00000001
    password_mask=2#00000010
@@ -67,7 +80,6 @@ function set_config_options {
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
         hipchat)
-            selected_options=$((${selected_options} | ${url_mask}))
             selected_options=$((${selected_options} | ${password_mask}))
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
@@ -104,7 +116,6 @@ function set_variables {
         printf ${engine_url} > ${fname}
         case ${adapter} in
             rocketchat) export ROCKETCHAT_URL=${engine_url};;
-            hipchat   ) export HUBOT_HIPCHAT_HOST=${engine_url};;
         esac
         bot_id=$(printf ${engine_url} | sha256sum | head -c 16)
     fi
@@ -120,7 +131,8 @@ function set_variables {
         unset bot_token
     fi
 
-    local_bot_dir="${SNAP_USER_COMMON}/${bot_name}/${bot_id}"
+    local_bot_dir="${SNAP_USER_COMMON}/${bot_name}"
+    [[ -n ${bot_id} ]] && local_bot_dir+="/${bot_id}"
     mkdir -p "${local_bot_dir}"
     exit_if_running "[+] ${bot_name} is already running wild on ${engine}!"
 
@@ -142,6 +154,7 @@ function set_variables {
         fname="${local_bot_dir}/.prev_rooms"
         touch ${fname}
         prev_rooms=$(cat "${fname}")
+        [[ -z ${prev_rooms} ]] && prev_rooms="all"
         while [[ ! "${bot_rooms}" =~ ^[-_,a-zA-Z0-9]{3,64}$ ]]
         do
             read -ei "${prev_rooms}" -p "[?] Which channel(s) should ${bot_name} automatically join?
