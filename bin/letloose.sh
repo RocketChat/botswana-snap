@@ -127,7 +127,6 @@ function set_variables {
         case ${adapter} in
             slack) export HUBOT_SLACK_TOKEN=${bot_token};;
         esac
-        bot_id=$(printf ${bot_token} | sha256sum | head -c 16)
         unset bot_token
     fi
 
