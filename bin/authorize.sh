@@ -32,7 +32,7 @@ then
     abort
 fi
 
-if [[ -n ${uid} && ( ! ${uid} =~ [0-9]{1,8} || -z $(id "${uid}") ) ]]
+if [[ -n ${uid} && ( ! ${uid} =~ ^[0-9]{1,8}$ || -z $(id "${uid}") ) ]]
 then
     echo "[-] Invalid uid or user does not exist!"
     abort
