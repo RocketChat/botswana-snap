@@ -18,7 +18,7 @@ additional_adapters=(
 # Install adapters
 for adapter in "${additional_adapters[@]}"
 do
-    npm install "${adapter}" --save
+    npm install --save "${adapter}"
 done
 
 # Cleanup scripts

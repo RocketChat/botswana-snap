@@ -230,10 +230,11 @@ echo "[*] Observing ${bot_name}'s behavior..."
 for i in {1..5}
 do
     sleep 1
-    errors=($(tail -n 50 "${logpath}" | grep ERROR))
+    errors=($(tail -n 50 "${logpath}" | grep -i error))
 done
 
 [[ -n ${errors} ]] && warn_error "${errors[@]}"
 exit_if_running "[+] ${bot_name} is now running wild on ${engine}!"
+echo "[-] ${bot_name} has not been activated!"
 exit 1
 
