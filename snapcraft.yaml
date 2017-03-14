@@ -7,7 +7,6 @@ grade: devel
 confinement: strict
 
 apps:
-    # TODO stop/restart bots with process-control
     authorize:
         command: env LC_ALL=C authorize.sh
     deploy:
@@ -16,9 +15,9 @@ apps:
     letloose:
         command: env PATH=$PATH:$SNAP LC_ALL=C letloose.sh
         plugs: [home, network, network-bind, system-observe]
-    observe:
-        command: env LC_ALL=C observe.sh
-        plugs: [system-observe]
+    admin:
+        command: env LC_ALL=C admin.sh
+        plugs: [home, network, network-bind, process-control, system-observe]
 
 parts:
     node:
@@ -45,7 +44,7 @@ parts:
             common_functions.sh: bin/common_functions.sh
             deploy.sh: bin/deploy.sh
             letloose.sh: bin/letloose.sh
-            observe.sh: bin/observe.sh
+            admin.sh: bin/admin.sh
         stage-packages:
             - bash
             - coreutils

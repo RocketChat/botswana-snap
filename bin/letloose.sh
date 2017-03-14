@@ -17,6 +17,8 @@ source ${SNAP}/bin/common_functions.sh
 require_nonroot
 check_authz
 
+# TODO take arguments for automated deployment
+
 PS3="> "
 
 echo "[?] What is your chat engine?"
@@ -62,20 +64,55 @@ do
 done
 printf "${bot_name}" > ${fname}
 
-        url_mask=2#00000001
-   password_mask=2#00000010
-      token_mask=2#00000100
- join_rooms_mask=2#00001000
-#    unused_mask=2#00010000
-#    unused_mask=2#00100000
-#    unused_mask=2#01000000
-#    unused_mask=2#10000000
+fname="${SNAP_USER_COMMON}/${bot_name}/.prev_url"
+mkdir -p $(dirname ${fname})
+touch ${fname}
+prev_url=$(cat "${fname}")
+while [[ ! "${engine_url}" =~ ^https?://[-_#.a-zA-Z0-9:\&?=]{3,64}$ ]]
+do
+    # Setting IFS to a space since URLs should never have a space
+    IFS=" " read -ei "${prev_url}" -p "[?] What is your ${engine} URL?
+> " engine_url
+done
+printf ${engine_url} > ${fname}
+case ${adapter} in
+    rocketchat) export ROCKETCHAT_URL=${engine_url};;
+esac
+bot_id=$(printf ${engine_url} | base64)
+
+local_bot_dir="${SNAP_USER_COMMON}/${bot_name}"
+[[ -n ${bot_id} ]] && local_bot_dir+="/${bot_id}"
+mkdir -p "${local_bot_dir}"
+
+function warn_error {
+    msg=("$@")
+    echo "[-] Something's not right..."
+    [[ -n ${msg} ]] && printf '[!] %s\n' "${msg[@]}"
+    echo "[*] Please check ${logpath} for more details."
+}
+
+function exit_if_running {
+    pid=$(pgrep -f "${adapter} --name ${local_bot_dir} --alias ${bot_name}")
+    if [[ -n ${pid} ]]
+    then
+        msg="${1}"
+        [[ -n ${msg} ]] && echo "${msg}"
+        echo "    PID: ${pid}"
+        exit 0
+    fi
+}
+
+exit_if_running "[+] ${bot_name} is already running wild on ${engine}!"
+
+   password_mask=2#0001
+      token_mask=2#0010
+ join_rooms_mask=2#0100
+#    unused_mask=2#1000
 
 function set_config_options {
-    selected_options=2#00000000
+    selected_options=2#0000
     case ${adapter} in
         rocketchat)
-            selected_options=$((${selected_options} | ${url_mask}))
             selected_options=$((${selected_options} | ${password_mask}))
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
@@ -88,38 +125,7 @@ function set_config_options {
     esac
 }
 
-function exit_if_running {
-    pid=$(pgrep -f "${bot_id} --alias ${bot_name} -a ${adapter}")
-    if [[ -n ${pid} ]]
-    then
-        msg="${1}"
-        [[ -n ${msg} ]] && echo "${msg}"
-        echo "[*] Prior to making further changes, please tranquilize ${bot_name} by running:"
-        echo "    kill ${pid} (sounds lethal, but it's not)"
-        exit 0
-    fi
-}
-
 function set_variables {
-    if [[ $((${selected_options} & ${url_mask})) > 0 ]]
-    then
-        fname="${SNAP_USER_COMMON}/${bot_name}/.prev_url"
-        mkdir -p $(dirname ${fname})
-        touch ${fname}
-        prev_url=$(cat "${fname}")
-        while [[ ! "${engine_url}" =~ ^https?://[-_#.a-zA-Z0-9:\&?=]{3,64}$ ]]
-        do
-            # Setting IFS to a space since URLs should never have a space
-            IFS=" " read -ei "${prev_url}" -p "[?] What is your ${engine} URL?
-> " engine_url
-        done
-        printf ${engine_url} > ${fname}
-        case ${adapter} in
-            rocketchat) export ROCKETCHAT_URL=${engine_url};;
-        esac
-        bot_id=$(printf ${engine_url} | sha256sum | head -c 16)
-    fi
-
     if [[ $((${selected_options} & ${token_mask})) > 0 ]]
     then
         read -p "[?] What is your ${engine} bot token?
@@ -129,11 +135,6 @@ function set_variables {
         esac
         unset bot_token
     fi
-
-    local_bot_dir="${SNAP_USER_COMMON}/${bot_name}"
-    [[ -n ${bot_id} ]] && local_bot_dir+="/${bot_id}"
-    mkdir -p "${local_bot_dir}"
-    exit_if_running "[+] ${bot_name} is already running wild on ${engine}!"
 
     if [[ $((${selected_options} & ${password_mask})) > 0 ]]
     then
@@ -193,21 +194,14 @@ do
     read -ei "${prev_scripts_dir}" -p "[?] Where are ${bot_name}'s behavior scripts located?
     Must point to a directory within ${homedir}. Inexistent directories will be created.
 > " scripts_dir
-    mkdir -p ${scripts_dir}
-    # Ensure we're grabbing the absolute path just in case
-    scripts_dir=$(readlink -e ${scripts_dir})
 done
+mkdir -p ${scripts_dir}
+# Ensure we're grabbing the absolute path just in case
+scripts_dir=$(readlink -e ${scripts_dir})
 printf "${scripts_dir}" > ${fname}
 
 logpath="${local_bot_dir}/${bot_name}.log"
 cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
-
-function warn_error {
-    msg=("$@")
-    echo "[-] Something's not right..."
-    [[ -n ${msg} ]] && printf '[!] %s\n' "${msg[@]}"
-    echo "[*] Please check ${logpath} for more details."
-}
 
 cd "${local_bot_dir}"
 
@@ -223,7 +217,7 @@ fi
 
 echo "[+] Preliminary checks passed!"
 echo "[*] Releasing ${bot_name}..."
-./bin/hubot --name "${local_bot_dir}" --alias "${bot_name}" -a "${adapter}" --disable-httpd --require ${scripts_dir} &> "${logpath}" &
+./bin/hubot -a ${adapter} --name ${local_bot_dir} --alias ${bot_name} --require ${scripts_dir} --disable-httpd &> "${logpath}" &
 
 IFS=$'\n'
 echo "[*] Observing ${bot_name}'s behavior..."
