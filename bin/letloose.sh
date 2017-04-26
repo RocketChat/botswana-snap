@@ -205,7 +205,7 @@ cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
 
 cd "${local_bot_dir}"
 
-delay=10
+delay=60
 echo "[*] Running preliminary checks on ${bot_name}; please wait up to ${delay} seconds..."
 timeout ${delay} ./bin/hubot --config-check -a "${adapter}" --disable-httpd &> "${logpath}"
 if [[ $? != 0 ]]
