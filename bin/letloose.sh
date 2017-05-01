@@ -1,6 +1,7 @@
 #! /bin/bash
 
 function on_exit {
+    unset HUBOT_DISCORD_TOKEN
     unset HUBOT_HIPCHAT_JID
     unset HUBOT_HIPCHAT_PASSWORD
     unset HUBOT_HIPCHAT_ROOMS
@@ -17,22 +18,23 @@ source ${SNAP}/bin/common_functions.sh
 require_nonroot
 check_authz
 
-# TODO take arguments for automated deployment
-
 PS3="> "
 
 echo "[?] What is your chat engine?"
-select engine in "Rocket.Chat" "Slack" "HipChat"
+select engine in "Rocket.Chat" "Discord" "HipChat" "Slack"
 do
     case ${engine} in
         Rocket.Chat)
             adapter="rocketchat"
             break;;
-        Slack)
-            adapter="slack"
+        Discord)
+            adapter="discord"
             break;;
         HipChat)
             adapter="hipchat"
+            break;;
+        Slack)
+            adapter="slack"
             break;;
     esac
 done
@@ -40,7 +42,7 @@ done
 fname="${SNAP_USER_COMMON}/.prev_bot_name"
 touch "${fname}"
 prev_bot_name=$(cat "${fname}")
-while [[ ! "${bot_name}" =~ ^[-_@.a-zA-Z0-9]{3,64}$ ]]
+while [[ ! "${bot_name}" =~ ^[-_@.a-zA-Z0-9]{3,128}$ ]]
 do
     read -ei "${prev_bot_name}" -p "[?] What is the bot account's user name or ID?
 > " bot_name
@@ -68,7 +70,7 @@ fname="${SNAP_USER_COMMON}/${bot_name}/.prev_url"
 mkdir -p $(dirname ${fname})
 touch ${fname}
 prev_url=$(cat "${fname}")
-while [[ ! "${engine_url}" =~ ^https?://[-_#.a-zA-Z0-9:\&?=]{3,64}$ ]]
+while [[ ! "${engine_url}" =~ ^https?://[-_#.a-zA-Z0-9:/\&?=]{3,128}$ ]]
 do
     # Setting IFS to a space since URLs should never have a space
     IFS=" " read -ei "${prev_url}" -p "[?] What is your ${engine} URL?
@@ -116,12 +118,16 @@ function set_config_options {
             selected_options=$((${selected_options} | ${password_mask}))
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
+        discord)
+            selected_options=$((${selected_options} | ${token_mask}))
+            ;;
         hipchat)
             selected_options=$((${selected_options} | ${password_mask}))
             selected_options=$((${selected_options} | ${join_rooms_mask}))
             ;;
         slack)
             selected_options=$((${selected_options} | ${token_mask}))
+            ;;
     esac
 }
 
@@ -131,7 +137,8 @@ function set_variables {
         read -p "[?] What is your ${engine} bot token?
 > " bot_token
         case ${adapter} in
-            slack) export HUBOT_SLACK_TOKEN=${bot_token};;
+            discord) export HUBOT_DISCORD_TOKEN=${bot_token};;
+            slack  ) export HUBOT_SLACK_TOKEN=${bot_token};;
         esac
         unset bot_token
     fi
@@ -155,7 +162,7 @@ function set_variables {
         touch ${fname}
         prev_rooms=$(cat "${fname}")
         [[ -z ${prev_rooms} ]] && prev_rooms="all"
-        while [[ ! "${bot_rooms}" =~ ^[-_,a-zA-Z0-9]{3,64}$ ]]
+        while [[ ! "${bot_rooms}" =~ ^[-_,a-zA-Z0-9]{3,128}$ ]]
         do
             read -ei "${prev_rooms}" -p "[?] Which channel(s) should ${bot_name} automatically join?
     Separate multiple channels with commas (no spaces); enter \"all\" for all public channels.
@@ -205,17 +212,6 @@ cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
 
 cd "${local_bot_dir}"
 
-delay=60
-echo "[*] Running preliminary checks on ${bot_name}; please wait up to ${delay} seconds..."
-timeout ${delay} ./bin/hubot --config-check -a "${adapter}" --disable-httpd &> "${logpath}"
-if [[ $? != 0 ]]
-then
-    echo "[-] Preliminary checks failed! Please try again."
-    echo "[*] You may check ${logpath} for details."
-    abort
-fi
-
-echo "[+] Preliminary checks passed!"
 echo "[*] Releasing ${bot_name}..."
 ./bin/hubot -a ${adapter} --name ${local_bot_dir} --alias ${bot_name} --require ${scripts_dir} --disable-httpd &> "${logpath}" &
 

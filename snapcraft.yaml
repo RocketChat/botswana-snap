@@ -22,7 +22,7 @@ apps:
 parts:
     node:
         plugin: nodejs
-        node-engine: 6.9.4
+        node-engine: 6.10.2
         node-packages:
             - yo@1.8.5
             - generator-hubot@0.4.0

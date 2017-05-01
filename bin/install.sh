@@ -11,8 +11,9 @@ initial_adapter="rocketchat"
 yo hubot --no-insight --owner="BOTSwana" --description="A wild bot from the BOTSwana Kalahari." --name="${bot_name}" --adapter="${initial_adapter}"
 
 additional_adapters=(
-"hubot-slack"
+"hubot-discord"
 "hubot-hipchat"
+"hubot-slack"
 )
 
 # Install adapters
