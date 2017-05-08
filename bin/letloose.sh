@@ -203,7 +203,7 @@ prev_scripts_dir=$(cat "${fname}")
 while [[ ! -d ${scripts_dir} || ${scripts_dir} != ${homedir}/* ]]
 do
     read -ei "${prev_scripts_dir}" -p "[?] Where are ${bot_name}'s behavior scripts located?
-    Must point to a directory within ${homedir}. Inexistent directories will be created.
+    Must point to an existing directory within ${homedir}.
 > " scripts_dir
 done
 mkdir -p ${scripts_dir}
