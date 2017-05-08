@@ -7,6 +7,8 @@ function on_exit {
     unset HUBOT_HIPCHAT_ROOMS
     unset HUBOT_SLACK_TOKEN
     unset LISTEN_ON_ALL_PUBLIC
+    unset RESPOND_TO_DM
+    unset RESPOND_TO_EDITED
     unset ROCKETCHAT_PASSWORD
     unset ROCKETCHAT_ROOM
     unset ROCKETCHAT_URL
@@ -178,6 +180,8 @@ function set_variables {
                 else
                     export ROCKETCHAT_ROOM=${bot_rooms}
                 fi
+                export RESPOND_TO_DM="true"
+                export RESPOND_TO_EDITED="true"
                 ;;
             hipchat)
                 [[ ${bot_rooms,,} == "all" ]] && bot_rooms="All"
@@ -208,19 +212,19 @@ scripts_dir=$(readlink -e ${scripts_dir})
 printf "${scripts_dir}" > ${fname}
 
 logpath="${local_bot_dir}/${bot_name}.log"
-cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
-
+deploy_bot
 cd "${local_bot_dir}"
 
 echo "[*] Releasing ${bot_name}..."
 ./bin/hubot -a ${adapter} --name ${local_bot_dir} --alias ${bot_name} --require ${scripts_dir} --disable-httpd &> "${logpath}" &
 
 IFS=$'\n'
-echo "[*] Observing ${bot_name}'s behavior..."
-for i in {1..5}
+delay=10
+echo "[*] Observing ${bot_name}'s behavior... Please wait ${delay} seconds"
+for i in $(seq 1 ${delay})
 do
     sleep 1
-    errors=($(tail -n 50 "${logpath}" | grep -i error))
+    errors=($(cat "${logpath}" | grep -i error))
 done
 
 [[ -n ${errors} ]] && warn_error "${errors[@]}"

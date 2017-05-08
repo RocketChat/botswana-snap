@@ -34,3 +34,21 @@ function check_authz {
     fi
 }
 
+function deploy_bot {
+    ext="external-scripts.json"
+    local_ext="${local_bot_dir}/${ext}"
+    local_ext_bak="${local_bot_dir}/${ext}.bak"
+
+    [[ -f ${local_ext} ]] && mv ${local_ext} ${local_ext_bak}
+
+    cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
+    rm ${local_ext}
+
+    if [[ -f ${local_ext_bak} ]]
+    then
+        mv ${local_ext_bak} ${local_ext}
+    else
+        cp ${SNAP}/chatbot/${ext} "${local_bot_dir}" > /dev/null
+    fi
+}
+

@@ -8,7 +8,7 @@ local_bot_dir=${1}
 
 if [[ -d ${local_bot_dir} && ${local_bot_dir} == ${homedir}/* ]]
 then
-    cp -frs ${SNAP}/chatbot/* "${local_bot_dir}" > /dev/null
+    deploy_bot
     echo "[+] Bot successfully deployed!"
     echo "[*] Execute the following command with desired options to run your bot:"
     echo "    cd ${local_bot_dir} && env PATH=\${PATH}:/snap/botswana/current/bin ./bin/hubot"

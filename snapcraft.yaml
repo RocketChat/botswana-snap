@@ -7,6 +7,9 @@ grade: devel
 confinement: strict
 
 apps:
+    admin:
+        command: env LC_ALL=C admin.sh
+        plugs: [home, network, network-bind, process-control, system-observe]
     authorize:
         command: env LC_ALL=C authorize.sh
     deploy:
@@ -15,42 +18,48 @@ apps:
     letloose:
         command: env PATH=$PATH:$SNAP LC_ALL=C letloose.sh
         plugs: [home, network, network-bind, system-observe]
-    admin:
-        command: env LC_ALL=C admin.sh
-        plugs: [home, network, network-bind, process-control, system-observe]
+    redis-server:
+        command: env LC_ALL=C start_redis.sh
+        daemon: simple
+        restart-condition: always
+        plugs: [network, network-bind]
 
 parts:
     node:
         plugin: nodejs
         node-engine: 6.10.2
         node-packages:
-            - yo@1.8.5
             - generator-hubot@0.4.0
+            - redis@2.7.1
+            - yo@1.8.5
         install: ./bin/install.sh
         stage:
-            - chatbot
             - bin
+            - chatbot
             - lib
         prime:
-            - chatbot
             - bin
+            - chatbot
             - lib
 
     scripts:
         plugin: dump
         source: bin/
         organize:
+            admin.sh: bin/admin.sh
             authorize.sh: bin/authorize.sh
             common_functions.sh: bin/common_functions.sh
             deploy.sh: bin/deploy.sh
             letloose.sh: bin/letloose.sh
-            admin.sh: bin/admin.sh
+            redis.conf: bin/redis.conf
+            start_redis.sh: bin/start_redis.sh
         stage-packages:
             - bash
             - coreutils
             - libc-bin
-            - python
             - python3
+            - python3-redis
+            - redis-server
         prime:
             - bin
             - usr
