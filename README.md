@@ -1,5 +1,13 @@
 # BOTSwana: the [Kalahari](https://en.wikipedia.org/wiki/Central_Kalahari_Game_Reserve) of bots
 
+Run as many bots as you want, with as many chats (Rocket.Chat,  Slack, HipChat, and more...) as you want, painlessly!
+
+BOTSwana enables you to develop, test, manage and run fleets of bots right on your Linux system.
+
+You no longer have to struggle with installing complex bot runtime, or pay dearly for bot SaaS.  Leverage the connectivity, storage, and multi-core computing power of your Linux system to manage or run tens or hundreds of bot concurrently.
+
+Unleash your personal Kalahari of Bots with BOTSwana TODAY !!
+
 # Installation
 Until BOTSwana is officially registered at the snap store, download the latest snap file for your architecture and run:  
 `sudo snap install botswana_x.x.x_arch.snap --dangerous`
