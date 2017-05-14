@@ -4,7 +4,7 @@ Run as many bots as you want, with as many chats (Rocket.Chat,  Slack, HipChat, 
 
 BOTSwana enables you to develop, test, manage and run fleets of bots right on your Linux system.
 
-You no longer have to struggle with installing complex bot runtime; or pay dearly for bot SaaS.  
+You no longer have to struggle with installing complex bot runtime; or give up privacy and pay dearly for bot SaaS.  
 
 Leverage the connectivity, storage, and multi-core computing power of your Linux system to manage and run tens (or hundreds!) of bots simultaneously.
 
