@@ -1,20 +1,20 @@
 # BOTSwana: the [Kalahari](https://en.wikipedia.org/wiki/Central_Kalahari_Game_Reserve) of bots
 
-## Installation
-Until BOTSwana is officially registered at the snap store, download the latest snap file for your architecture and run:
+# Installation
+Until BOTSwana is officially registered at the snap store, download the latest snap file for your architecture and run:  
 `sudo snap install botswana_x.x.x_arch.snap --dangerous`
 
-## Usage
-### Authorizing users
-Users must first be authorized to deploy and administer bots using BOTSwana. The root user can authorize other users by running:
+# Authorizing users
+Users must first be authorized to deploy and administer bots using BOTSwana. The root user can authorize other users by running:  
 `sudo snap run botswana.authorize add 1000`, replacing `1000` with the desired user ID.
 
-To discover your regular user ID, simply run:
+To discover your regular user ID, simply run:  
 `id`
-Sample output:
+
+Sample output:  
 `uid=1000(my_user) ...`
 
-#### Command reference for botswana.authorize
+## Command reference for botswana.authorize
 ```
 [*] Usage: sudo snap run botswana.authorize <action> [uid]
 [*] Possible actions are:
@@ -26,15 +26,15 @@ Sample output:
     Note: only the 'list' and 'purge' actions may be used without a uid
 ```
 
-### Deploying bots
-#### Interactively
+# Deploying bots
+## Interactively
 Simply run `snap run botswana.letloose` and follow the prompts!
 
-#### Automated deployment
+## Automated deployment
 For greater control over your bot, or to control it via scripts:
-- Create a directory where to store the bot files:
-E.g., `mkdir /home/user/mybot`
-- Execute the following command, replacing `/home/user/mybot` with the directory you created:
+- Create a directory where to store the bot files; e.g.:  
+`mkdir /home/user/mybot`
+- Execute the following command, replacing `/home/user/mybot` with the directory you created:  
 `snap run botswana.deploy /home/user/mybot`
 
 Sample output:
@@ -46,12 +46,12 @@ Sample output:
 
 Finally, edit the `launch.sh` file to add the desired configuration, then execute it to run your bot as a background process.
 
-### Administering deployed bots
-#### Listing active bots
-To list all active bots, run:
+# Administering deployed bots
+## Listing active bots
+To list all active bots, run:  
 `snap run botswana.admin list`
 
-##### Queries
+### Queries
 To find specific bots that may be active, boolean queries are available.
 
 Available query parameters are:
@@ -80,14 +80,14 @@ snap run botswana.admin list ADAPTER ISNT rocketchat
 snap run botswana.admin list "NAME ISNT mybot OR (NAME IS mybot AND ADAPTER IS rocketchat)"
 ```
 
-#### Deactivating bots
-To stop all active bots, run:
+## Deactivating bots
+To stop all active bots, run:  
 `snap run botswana.admin stop`
 
-##### Please note
-Bots deployed via `snap run botswana.deploy /my/bot/dir` cannot be stopped with this command.
+### Please note
+Bots deployed via `snap run botswana.deploy` cannot be stopped with this command.
 
-##### Queries
+### Queries
 To stop specific bots, boolean queries are available.
 
 Available query parameters are:
@@ -116,9 +116,9 @@ snap run botswana.admin stop ADAPTER ISNT rocketchat
 snap run botswana.admin stop "NAME ISNT mybot OR (NAME IS mybot AND ADAPTER IS rocketchat)"
 ```
 
-#### Checking bot logs
-To check the logs for a single bot, simply run:
-`snap run botswana.admin diag`
+## Checking bot logs
+To check the logs for a single bot, simply run:  
+`snap run botswana.admin diag`  
 This will show the logs of the first bot process found by BOTSwana.
 
 If multiple bots are active, use precise queries to select the desired bot:
@@ -127,10 +127,10 @@ If multiple bots are active, use precise queries to select the desired bot:
 snap run botswana.admin diag NAME IS mybot AND ADAPTER IS rocketchat
 ```
 
-Piping this command to `less` may be useful:
+Piping this command to `less` may be useful:  
 `snap run botswana.admin diag | less`
 
-#### Command reference for botswana.admin
+## Command reference for botswana.admin
 ```
 [*] Usage: snap run botswana.admin <action> [bot_name or PID]
 [*] Possible actions are:
@@ -146,8 +146,8 @@ Piping this command to `less` may be useful:
     Query example: "NAME IS mybot AND ADAPTER IS rocketchat"
 ```
 
-#### Adding scripts
-##### Globally
+## Adding scripts
+### Globally
 Using `snap run botswana.letloose` gives you the ability to choose a scripts directory. E.g.:
 ```
 [?] Where are guy_chapman's behavior scripts located?
@@ -161,13 +161,13 @@ Using `snap run botswana.deploy` gives you the same ability by specifying the sc
 ```
 # If desired, change to a directory where to look for additional scripts
 # ./scripts will still be utilized regardless of this setting
-scripts_dir="${local_bot_dir}/scripts"
+scripts_dir="/home/user/scripts"
 ```
 
-##### Individually
+### Individually
 Using `snap run botswana.letloose` creates an accessible directory where only this particular bot will look for scripts.
 
-To learn the location of that directory, run:
+To learn the location of that directory, run:  
 `snap run botswana.admin list`
 
 Sample output:
@@ -179,35 +179,39 @@ Sample output:
 [*] Home    - /home/user/snap/botswana/common/mybot/aHR0cHM6Ly9teWNoYXQuY29t
 [*] Scripts - /home/user/scripts
 ```
-Note the bot's Home directory:
+
+Note the bot's Home directory:  
 `[*] Home    - /home/user/snap/botswana/common/mybot/aHR0cHM6Ly9teWNoYXQuY29t`
 
-That directory will contain a scripts directory where only this bot will look for scripts:
+That directory will contain a scripts directory where only this bot will look for scripts:  
 `/home/user/snap/botswana/common/mybot/aHR0cHM6Ly9teWNoYXQuY29t/scripts`
 
-Using `snap run botswana.deploy` creates the bot directory at the specified location, such as:
+Using `snap run botswana.deploy` creates the bot directory at the specified location, such as:  
 `snap run botswana.deploy /home/user/mybot`
 
-In that case, the individual scripts directory will simply be:
+In that case, the individual scripts directory will simply be:  
 `/home/user/mybot/scripts`
 
-### Redis
-BOTSwana automatically spawns a Redis server, accessible only locally, for quick and somewhat persistent storage for all bots.
+# Redis
+BOTSwana automatically spawns a [Redis](https://redis.io/topics/introduction) server, by default only accessible locally, for quick and somewhat persistent storage for all bots.
 
-#### Configuration
-A sample configuration file is included and accessible by the root user at:
+## Configuration
+A sample configuration file is included and accessible at:  
 `/var/snap/botswana/current/redis/redis.conf`
 
-To modify Redis' configuration, first stop the service by running:
+To modify Redis' configuration, first stop the service by running:  
 `sudo service snap.botswana.redis-server stop`
 
-Then, modify `/var/snap/botswana/current/redis/redis.conf` and start the service:
+Then, modify `/var/snap/botswana/current/redis/redis.conf` and start the service:  
 `sudo service snap.botswana.redis-server start`
 
-#### Administration
-To check the status of the embedded Redis server:
+## Administration
+To check the status of the embedded Redis server:  
 `sudo service snap.botswana.redis-server status`
 
-To check its logs (assuming default configuration):
+To restart it:  
+`sudo service snap.botswana.redis-server restart`
+
+To check its logs (assuming default configuration):  
 `cat /var/snap/botswana/current/redis/redis.log`
 
