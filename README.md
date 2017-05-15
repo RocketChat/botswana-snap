@@ -11,7 +11,7 @@ Leverage the connectivity, storage, and multi-core computing power of your Linux
 _*Unleash your personal Kalahari of Bots with BOTSwana TODAY !!*_
 
 # Installation
-Until BOTSwana is officially registered at the snap store, download the latest snap file for your architecture and run:  
+Until BOTSwana is officially registered at the snap store, [download the latest snap file](https://github.com/elespike/botswana-snap/releases) for your architecture and run:  
 `sudo snap install botswana_x.x.x_arch.snap --dangerous`
 
 # Authorizing users
